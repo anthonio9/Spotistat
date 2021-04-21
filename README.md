@@ -1,4 +1,4 @@
-# Spotistat
+ seabord# Spotistat
 
 This is a simple python script printing pretty plots and charts based on **Spotify streaming history** data. Now you too can check the number of times you listened to your favourite song, before Spotify End's Year Summary!
 Isn't this awesome?
@@ -43,10 +43,16 @@ sudo pacman -S python-pip
 	Look [here](https://www.liquidweb.com/kb/install-pip-windows/)
 
 
-### Install required packages (pandas, numpy, seabord, matplotlib)
+### Install required packages (pandas, numpy, seaborn, matplotlib)
 
 ```sh
 pip install -r required.txt
+```
+
+or
+
+```sh
+pip install pandas numpy seaborn matplotlib
 ```
 
 ## Run
