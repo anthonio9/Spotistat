@@ -11,8 +11,9 @@ import seaborn
 from pandas.api.types import CategoricalDtype
 
 plt.close("all")
+
+# this package makes things look prettier
 seaborn.set()
-#plt.ion()
 
 def plot_df(df, x, y, title=None, y_label=None):
     fig, ax = plt.subplots(1, 1)
@@ -40,40 +41,46 @@ def plot_df(df, x, y, title=None, y_label=None):
 def ms2hr(ms_val):
     return ms_val/(1000*60*60)
 
-def file2data_frame(stream_file_list):
+def file2df(stream_file_list):
+    dfs = []
+
     for f_name in stream_file_list:
         with open(f_name) as f:
-            json_data = pd.json_normalize(json.loads( f.read() ))
+            json_data = pd.json_normalize(json.loads(f.read()))
             dfs.append(json_data)
     df = pd.concat(dfs, sort=False) # or sort=True depending on your needs
+
     return df
 
-def load_over_time(df):
+def load_over_all_time(df):
     # convert string datetime to datetime format
     df['endTime'] = pd.to_datetime(df['endTime'])
 
-    # change datetime format to only date
+    # change datetime format to only date, remember to keep the datatime format
     df['endTime'] = pd.to_datetime(df['endTime'].dt.strftime("%Y-%m-%d"))
 
     # get only date and duration of stream
     df_time = df[['endTime', 'msPlayed']]
 
-    # sum daily hours of spotify 
+    # sum daily played time of spotify, group by endTime, then sum all the records
     df_time_sum = df_time.groupby(['endTime'], as_index=False).agg({'msPlayed': 'sum'})
-    df_time_sum['hrPlayed'] = df_time_sum['msPlayed']/(1000*60*60)
 
-    #df_time_sum.info()
+    # count number of hours played every day
+    df_time_sum['hrPlayed'] = ms2hr(df_time_sum['msPlayed'])
+
     return df_time_sum
 
-def avg_day_load(df):
+def avg_weekday_load(df):
     # convert string datetime to datetime format
     df['endTime'] = pd.to_datetime(df['endTime'])
 
-    # change datetime format to only date
+    # change datetime format to only date, keep the dataframe format
     df['date'] = pd.to_datetime(df['endTime'].dt.strftime("%Y-%m-%d"))
 
     # group by date
     df = df.groupby('date', as_index=True).agg({'endTime':'count', 'msPlayed':'sum'})
+
+    # fill-in missing days, fill them with 0 msPlayed
     df = df.asfreq('D', fill_value=0)
     df.reset_index(level=0, inplace=True)
 
@@ -90,14 +97,14 @@ def avg_day_load(df):
             .agg({'weekday2':'count', 'endTime':'sum', 'msPlayed':'sum'}) \
             .rename(columns={'endTime':'noStreams', 'weekday2':'dayCount'})
 
-
-    df_week_sum['hrPlayed'] = df_week_sum['msPlayed']/(1000*60*60)
+    df_week_sum['hrPlayed'] = ms2hr(df_week_sum['msPlayed'])
     df_week_sum['hrPlayedAvg'] = df_week_sum['hrPlayed']/df_week_sum['dayCount']
     df_week_sum['noStreamsAvg'] = df_week_sum['noStreams']/df_week_sum['dayCount']
-    df_week_sum['lenStreamsAvgMin'] = df_week_sum['msPlayed']/df_week_sum['noStreams']/(1000*60)
+    df_week_sum['lenStreamsAvgMin'] = df_week_sum['msPlayed']/ms2hr(df_week_sum['noStreams'])
 
     print(df_week_sum)
 
+    # this isn't necessary
     df_week_sum = df_week_sum.drop(columns=['msPlayed', 'hrPlayed', 'dayCount', 'noStreams'])
 
     fig = plt.figure()
@@ -130,14 +137,14 @@ def avg_day_load(df):
 
     print(df_week_sum)
 
-def top10artists(df, top=10, plot=True):
+def top_artists(df, top=10, plot=True):
     print('Top Artists')
-    df_top10 = df.groupby('artistName', as_index=False) \
+    df_top = df.groupby('artistName', as_index=False) \
         .agg({'endTime':'count', 'msPlayed':'sum'}) \
         .rename(columns={'endTime':'noStreams', 'msPlayed':'streamTimeMs'})
-    df_top10['streamTimeHr'] = df_top10['streamTimeMs']/(1000*60*60)
-    df_top10 = df_top10.sort_values(by=['noStreams'], ascending=False)
-    df_top10 = df_top10.head(top)
+    df_top['streamTimeHr'] = ms2hr(df_top['streamTimeMs'])
+    df_top = df_top.sort_values(by=['noStreams'], ascending=False)
+    df_top = df_top.head(top)
 
     if plot:
         fig = plt.figure()
@@ -146,32 +153,32 @@ def top10artists(df, top=10, plot=True):
         ax2.grid(False)
         
         width = 0.27
-        ind = np.arange(len(df_top10))
+        ind = np.arange(len(df_top))
 
-        bar1 = ax.bar(ind, df_top10['noStreams'], width, color='r',
+        bar1 = ax.bar(ind, df_top['noStreams'], width, color='r',
                       label='Number of Streams')
-        bar2 = ax2.bar(ind + width, df_top10['streamTimeHr'], width, color='b',
+        bar2 = ax2.bar(ind + width, df_top['streamTimeHr'], width, color='b',
                       label='Stream Time [hours]')
         fig.legend(loc="upper right")
 
         ax.set_xticks(ind+width)
 
-        ax.set_xticklabels( df_top10['artistName'])
+        ax.set_xticklabels( df_top['artistName'])
         ax.set_title(f'Top {top} artists sorted by numer of streams')
         ax.set_ylabel('Number of streams')
 
         ax2.set_ylabel('Stream time [h]')
         fig.autofmt_xdate()
 
-    print(df_top10)
-    return df_top10
+    print(df_top)
+    return df_top
 
-def top10tracks(df, top=10, plot=True):
+def top_tracks(df, top=10, plot=True):
     print('Top Tracks')
     df_top10 = df.groupby(['trackName', 'artistName'], as_index=False) \
         .agg({'endTime':'count', 'msPlayed':'sum'}) \
         .rename(columns={'endTime':'noStreams', 'msPlayed':'streamTimeMs'})
-    df_top10['streamTimeHr'] = df_top10['streamTimeMs']/(1000*60*60)
+    df_top10['streamTimeHr'] = ms2hr(df_top10['streamTimeMs'])
     df_top10 = df_top10.sort_values(by=['noStreams'], ascending=False)
     df_top10 = df_top10.head(top)
     df_top10['fullName'] = df_top10['artistName'] + ' - ' + df_top10['trackName']
@@ -202,7 +209,8 @@ def top10tracks(df, top=10, plot=True):
     print(df_top10)
     return df_top10
 
-def top10artists_history(df, df_top10, plot=True):
+def top_artists_history(df, df_top10, plot=True):
+    # get only those artists that are in given df_top10 dataframe
     df_top = df[df['artistName'].isin(df_top10['artistName'])]
     df_top['endTime'] = pd.to_datetime(df_top['endTime'])
 
@@ -223,7 +231,7 @@ def top10artists_history(df, df_top10, plot=True):
         ax.set_title(f'Top {len(df_top10)} artists streaming history')
         ax.set_ylabel('Number of streams')
 
-def top10artists_most_days(df, top=20, plot=True):
+def top_artists_most_days(df, top=20, plot=True):
     df['endTime'] = pd.to_datetime(df['endTime'])
 
     # change datetime format to only date
@@ -248,16 +256,18 @@ def top10artists_most_days(df, top=20, plot=True):
         fig.autofmt_xdate()
 
 def main(stream_file_list):
-    df = file2data_frame(stream_file_list)
+    # convert all StreamingHistory files to one data frame
+    df = file2df(stream_file_list)
 
-    df_time_sum = load_over_time(df)
+    # get dataframe with spotify listening time per day
+    df_time_sum = load_over_all_time(df)
     plot_df(df_time_sum, 'endTime', 'hrPlayed', title='Listening time to Spotify streams per day: 2020/2021', y_label='Hours [h]' )
 
-    df_weekday_sum = avg_day_load(df)
-    df_top10 = top10artists(df, 30)
-    top10tracks(df, 30)
-    top10artists_history(df, df_top10.head(5))
-    top10artists_most_days(df, 30)
+    df_weekday_sum = avg_weekday_load(df)
+    df_top10 = top_artists(df, 30)
+    top_tracks(df, 30)
+    top_artists_history(df, df_top10.head(5))
+    top_artists_most_days(df, 30)
     plt.show()
 
 
