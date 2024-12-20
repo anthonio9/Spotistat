@@ -1,4 +1,4 @@
- seabord# Spotistat
+# Spotistat
 
 This is a simple python script printing pretty plots and charts based on **Spotify streaming history** data. Now you too can check the number of times you listened to your favourite song, before Spotify End's Year Summary!
 Isn't this awesome?
@@ -57,11 +57,14 @@ pip install pandas numpy seaborn matplotlib
 
 ## Run
 
-Spotify lets you download zip with your data, there is `one` or more files containing you **streaming history**, these are called `StreamingHistoryX`, where `X` is a number. 
-Run the `spotistat.py` script followed by path to all of you `StreamingHistoryX` files.
+Spotify lets you download your data - [Link to request Data from Spotify](https://www.spotify.com/in-en/account/privacy/).
+You should receive `one` or more files containing your **streaming history** (files will be in json), and will be in a format `StreamingHistoryX`, where `X` is a number. 
+Run the `spotistat.py` from the same directory where `StreamingHistoryX` json files are stored.
+
+Note that you may have to rename the Streaming History files to the required format, which is "StreamingHistoryX.json" where X should be a unique digit
 
 Example:
 
 ```sh
-python3 spotistat.py '../MyData/StreamingHistory0.json' '../MyData/StreamingHistory1.json'
+python spotistat.py
 ```
