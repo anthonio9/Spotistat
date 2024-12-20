@@ -1,4 +1,4 @@
- seabord# Spotistat
+# Spotistat
 
 This is a simple python script printing pretty plots and charts based on **Spotify streaming history** data. Now you too can check the number of times you listened to your favourite song, before Spotify End's Year Summary!
 Isn't this awesome?
@@ -66,5 +66,5 @@ Note that you may have to rename the Streaming History files to the required for
 Example:
 
 ```sh
-python3 spotistat.py
+python spotistat.py
 ```
