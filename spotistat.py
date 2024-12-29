@@ -119,7 +119,7 @@ def avg_day_load(df):
 
     ax2.axis('equal')
     ax2.pie(df_week_sum['noStreamsAvg'], labels=days, autopct='%1.2f%%')
-    ax2.set_title('Average Nubmer of Streams per Day')
+    ax2.set_title('Average Number of Streams per Day')
 
     ax3.axis('equal')
     ax3.pie(df_week_sum['lenStreamsAvgMin'], labels=days, autopct='%1.2f%%')
@@ -167,7 +167,7 @@ def top10artists(df, top=10, plot=True):
         ax.set_xticks(ind + width)
 
         ax.set_xticklabels(df_top10['artistName'])
-        ax.set_title(f'Top {top} artists sorted by numer of streams')
+        ax.set_title(f'Top {top} artists sorted by number of streams')
         ax.set_ylabel('Number of streams')
 
         ax2.set_ylabel('Stream time [h]')
@@ -204,7 +204,7 @@ def top10tracks(df, top=10, plot=True):
 
         ax.set_xticks(ind + width)
         ax.set_xticklabels(df_top10['fullName'])
-        ax.set_title(f'Top {top} songs sorted by numer of streams')
+        ax.set_title(f'Top {top} songs sorted by number of streams')
         ax.set_ylabel('Number of streams')
 
         ax2.set_ylabel('Stream time [h]')
@@ -284,7 +284,8 @@ def main(stream_file_list):
 
 if __name__ == "__main__":
     all_files = [pos_json for pos_json in os.listdir(os.getcwd())
-                 if re.match(r"StreamingHistory\d*\.json$", pos_json)]
+                 if re.match(r"StreamingHistory\d*\.json$", pos_json)
+                 or re.match(r"StreamingHistory_music_\d*\.json$", pos_json)]
     # print(f"All files found: {all_files}")
     if all_files:
         main(all_files)
